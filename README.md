@@ -18,27 +18,11 @@ docker-compose up
 - Pushes new key:value pairs
 - sets modified time
 - updates new value if key exists
-- Body format:
-{
-    "pairs": [
-        {
-            "key": 1,
-            "value": 2
-        }
-    ]
-}
+
 #### PATCH
 - sets modified time
 - updates new value if key exists
-- Body format:
-{
-    "pairs": [
-        {
-            "key": 1,
-            "value": 2
-        }
-    ]
-}
+
 #### GET /values
 - returns all values
 - updates modified time
