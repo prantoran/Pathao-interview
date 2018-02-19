@@ -87,32 +87,28 @@ type RetValue struct {
 	// Modified time.Time `json:"modified"`
 }
 
-type PatchValueReq struct {
-	Pairs []RetValue `json:"pairs"`
-}
-
 type PatchResponse struct {
 	NotFoundKeys []string `json:"notfoundkeys"`
 	UpdatedKeys  []string `json:"updatedkeys"`
 }
 
 func PatchKeyValues(w http.ResponseWriter, r *http.Request) {
-	req := PatchValueReq{}
-	_ = json.NewDecoder(r.Body).Decode(&req)
+	json_map := make(map[string]interface{})
+	_ = json.NewDecoder(r.Body).Decode(&json_map)
 	ret := PatchResponse{}
-	for _, u := range req.Pairs {
-		v, _ := GetPair(u.Key)
+	for key, val := range json_map {
+		v, _ := GetPair(key)
 		duration := time.Since(v.Modified)
 		if duration.Minutes() > float64(TTLMinute) {
 			fmt.Printf("over TTLMinute\n")
 			v.Delete()
-			ret.NotFoundKeys = append(ret.NotFoundKeys, u.Key)
+			ret.NotFoundKeys = append(ret.NotFoundKeys, key)
 		} else {
-			v.Key = u.Key
-			v.Value = u.Value
+			v.Key = key
+			v.Value = val.(string)
 			v.Modified = time.Now()
 			v.Put()
-			ret.UpdatedKeys = append(ret.UpdatedKeys, u.Key)
+			ret.UpdatedKeys = append(ret.UpdatedKeys, key)
 		}
 	}
 
@@ -124,32 +120,31 @@ type PostKeysResponse struct {
 	OldKeys []string `json:"oldkeys"`
 }
 
-type PostValueReq struct {
-	Pairs []RetValue `json:"pairs"`
-}
-
 func PostKeyValues(w http.ResponseWriter, r *http.Request) {
-	req := PostValueReq{}
-	_ = json.NewDecoder(r.Body).Decode(&req)
+
+	json_map := make(map[string]interface{})
+	_ = json.NewDecoder(r.Body).Decode(&json_map)
 	ret := PostKeysResponse{}
-	for _, u := range req.Pairs {
-		if KeyExist(u.Key) {
-			v, _ := GetPair(u.Key)
-			v.Value = u.Value
+
+	for key, val := range json_map {
+		fmt.Printf("k: %v val: %v\n", key, val)
+		if KeyExist(key) {
+			v, _ := GetPair(key)
+			v.Value = val.(string)
 			v.Modified = time.Now()
 			v.Put()
-			ret.OldKeys = append(ret.OldKeys, u.Key)
+			ret.OldKeys = append(ret.OldKeys, key)
 		} else {
 			v := KeyValues{}
 
-			v.Key = u.Key
-			v.Value = u.Value
+			v.Key = key
+			v.Value = val.(string)
 			v.Modified = time.Now()
 			v.Put()
-			ret.NewKeys = append(ret.NewKeys, u.Key)
+			ret.NewKeys = append(ret.NewKeys, key)
 		}
-
 	}
+
 	ServeJSON(w, ret)
 }
 
