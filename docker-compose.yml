@@ -1,0 +1,28 @@
+version: '2.1'
+
+services:
+  app:
+    image: golang:1.8
+    volumes:
+      - .:/go/src/go-with-compose
+    working_dir: /go/src/go-with-compose
+    command: go run app/main.go
+    ports:
+      - '4260:4260'
+    depends_on:
+      db:
+        condition: service_started
+    links:
+      - db
+    environment:
+      MONGO_URL: mongodb://127.0.0.1:4000/interview
+  db:
+    image: mongo:3.4
+    command: mongod --port 4000
+    container_name: pinku-db
+    ports:
+      - '4000:4000'
+    volumes:
+      - ./backup:/backup:rw
+
+    
